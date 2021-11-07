@@ -27,7 +27,6 @@
 </template>
 
 <script>
-import initwebSocket from '@/utils/webSocket.js'
 import { mapGetters } from 'vuex'
 export default {
   name: '',
@@ -41,14 +40,12 @@ export default {
     }
   },
   created() {
-    this.receiveMessage()
+    // this.receiveMessage()
+    this.$store.commit('websocket/webSocketInit')
     this.getAllUser()
   },
   computed: {
     ...mapGetters(['userInfo'])
-  },
-  destroyed() {
-    this.socket.close(this.userInfo)
   },
   methods: {
     // 发送消息到服务器
@@ -63,7 +60,8 @@ export default {
             message: this.textarea,
             sendTo: this.selectUser
           }
-          this.socket.send(JSON.stringify(data))
+          this.$store.commit('websocket/webSocketSend', data)
+          // this.socket.send(JSON.stringify(data))
           this.textarea = ''
         }
       }
@@ -72,14 +70,13 @@ export default {
       window.$common.post('/api/getAllUser', {
         user_account: this.userInfo.user_account
       }).then(res => {
-        console.log(res)
+        // console.log(res)
         if (res.data.retCode === 1) {
           this.userOptions = res.data.result
         }
       })
     },
     receiveMessage() {
-      this.socket = initwebSocket(this.userInfo)
       if ('WebSocket' in window) {
         // 接收
         this.socket.onmessage = function(mes) {

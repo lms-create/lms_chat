@@ -27,7 +27,7 @@ Vue.use(ElementUI, { size: 'small' })
 
 Vue.config.productionTip = false
 Vue.prototype.$axios = axios
-
+// Vue.prototype.$websocket = websocket;
 Vue.prototype.$sha256 = sha256
 Vue.prototype.$tips = tips
 Vue.prototype.$globalData = globalData

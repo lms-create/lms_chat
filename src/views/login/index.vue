@@ -69,6 +69,7 @@
 </template>
 
 <script>
+// import { mapMutations } from 'vuex'
 // import { validaccount } from '@/utils/validate'
 export default {
   name: 'Login',
@@ -130,7 +131,8 @@ export default {
       }
       this.$store
         .dispatch('user/login', args)
-        .then(() => {
+        .then((res) => {
+          // console.log(res)
           this.$router.push({ path: '/overview' })
           this.$message.success('登录成功！')
           this.loading = false

@@ -27,7 +27,8 @@ const actions = {
         if (res.data.retCode === 1) {
           localStorage.setItem('token', res.data.result.token)
           commit('SET_USER_INFO', res.data.result)
-          resolve()
+          sessionStorage.setItem('user_account', res.data.result.user_account)
+          resolve(res.data.result)
           // this.$message.success(res.data.message)
         } else {
           reject(res.data.message)
@@ -43,6 +44,7 @@ const actions = {
       // commit('SET_TOKEN', '')
       // removeToken()
       localStorage.clear()
+      sessionStorage.clear()
       commit('SET_USER_INFO', null)
       resetRouter()
       resolve(null)
