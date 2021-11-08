@@ -47,10 +47,17 @@ const mutations = {
       that.commit('websocket/webSocketPing')
       // 注：只有连接正常打开中 ，才能正常收到消息
       state.socketTask.onmessage = function(res) {
-        console.log('收到服务器内容：', JSON.parse(res.data))
+        // console.log('收到服务器内容：', JSON.parse(res.data))
         state.msg = JSON.parse(res.data)
         const data = JSON.parse(res.data)
-        if (data.code === 2) {
+        if (data.code === 1) {
+          const chatRecord = JSON.parse(sessionStorage.getItem(data.toYouUser)) || []
+          chatRecord.push({
+            flag: 2,
+            message: data.data
+          })
+          sessionStorage.setItem(data.toYouUser, JSON.stringify(chatRecord))
+        } else if (data.code === 2) {
           state.userList = data.result
         }
       }

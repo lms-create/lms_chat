@@ -3,7 +3,7 @@
     <div class="chat-box">
       <div class="friend">
         <div class="serach-user">在线用户</div>
-        <div v-for="item in socketUserList" :key="item.account" class="friend-card">
+        <div v-for="item in socketUserList" :key="item.account" class="friend-card" @click="changeUser(item)">
           <div class="card-name"><p>{{ item.user_name }}</p></div>
           <div style="color: #1abb27;font-weight:400">在线</div>
         </div>
@@ -12,15 +12,25 @@
         </div>
       </div>
       <div class="chat">
-        <div class="chat-head">消息</div>
+        <div class="chat-head">{{ nowuser.now_user_name }}</div>
         <div class="message-box">
-          <div class="show-message">
-            消息框
+          <div id="message" class="show-message">
+            <div v-show="nowuser.now_user_account !== ''" class="single-message-box">
+              <div
+                v-for="item in record"
+                :key="item.id"
+                :class="item.flag == 1 ? 'single-me' : 'single-message'"
+              >
+                <span />
+                <div v-show="item.flag === 2">{{ item.message }}</div>
+                <div v-show="item.flag === 1">{{ item.message }}</div>
+              </div>
+            </div>
           </div>
           <div class="input-message">
             <el-input v-model="textarea" class="textarea" type="textarea" />
             <div class="input-button">
-              <el-button type="primary">发送</el-button>
+              <el-button type="primary" :disabled="nowuser.flag" @click="sendMsg">发送</el-button>
             </div>
           </div>
         </div>
@@ -38,53 +48,78 @@ export default {
       textarea: '',
       socket: null,
       sendUserName: 'aaa',
+      record: [],
       selectUser: '',
-      userOptions: []
+      nowuser: {
+        now_user_name: '请选择聊天的对象',
+        flag: true,
+        now_user_account: ''
+      }
     }
   },
-  created() {
-    // this.receiveMessage()
-    this.$store.commit('websocket/webSocketInit')
-    // this.getAllUser()
-  },
-  computed: {
-    ...mapGetters(['userInfo', 'socketUserList'])
-  },
-  methods: {
-    // 发送消息到服务器
-    sendMessage() {
-      if ('WebSocket' in window) {
-        if (this.textarea === '') {
-          return true
-        } else {
-          const data = {
-            type: 1,
-            user_account: this.userInfo.user_account,
-            message: this.textarea,
-            sendTo: this.selectUser
-          }
-          this.$store.commit('websocket/webSocketSend', data)
-          // this.socket.send(JSON.stringify(data))
-          this.textarea = ''
+  watch: {
+    'socketUserList.length': function(val) {
+      if (val === 0) {
+        this.nowuser = {
+          now_user_name: '请选择聊天的对象',
+          flag: true,
+          now_user_account: ''
         }
       }
     },
-    // getAllUser() {
-    //   window.$common.post('/api/getAllUser', {
-    //     user_account: this.userInfo.user_account
-    //   }).then(res => {
-    //     // console.log(res)
-    //     if (res.data.retCode === 1) {
-    //       this.userOptions = res.data.result
-    //     }
-    //   })
-    // },
-    receiveMessage() {
-      if ('WebSocket' in window) {
-        // 接收
-        this.socket.onmessage = function(mes) {
-          console.log(JSON.parse(mes.data))
+    socketMsgs: function() {
+      this.getChatRecord()
+      this.scrollEnd()
+    }
+  },
+  created() {
+    this.$store.commit('websocket/webSocketInit')
+  },
+  computed: {
+    ...mapGetters(['userInfo', 'socketUserList', 'socketMsgs'])
+  },
+  methods: {
+    scrollEnd() {
+      this.$nextTick(() => {
+        var div = document.getElementById('message')
+        div.scrollTop = div.scrollHeight
+      })
+    },
+    // 切换聊天的对象
+    changeUser(data) {
+      this.textarea = ''
+      this.nowuser = {
+        now_user_name: data.user_name,
+        now_user_account: data.user_account,
+        flag: false
+      }
+      this.getChatRecord()
+      this.scrollEnd()
+    },
+    getChatRecord() {
+      this.record = JSON.parse(sessionStorage.getItem(this.nowuser.now_user_account))
+    },
+    sendMsg() {
+      if (this.textarea === '') {
+        return true
+      } else {
+        const data = {
+          type: 1,
+          user_account: this.userInfo.user_account,
+          msg: this.textarea,
+          sendTo: this.nowuser.now_user_account
         }
+        console.log(data)
+        const chatRecord = JSON.parse(sessionStorage.getItem(this.nowuser.now_user_account)) || []
+        chatRecord.push({
+          flag: 1,
+          message: this.textarea
+        })
+        sessionStorage.setItem(this.nowuser.now_user_account, JSON.stringify(chatRecord))
+        this.$store.commit('websocket/webSocketSend', data)
+        this.getChatRecord()
+        this.scrollEnd()
+        this.textarea = ''
       }
     }
   }
@@ -150,7 +185,26 @@ export default {
         display: flex;
         flex-direction: column;
         .show-message{
-          flex: 1;
+          height: 319px;
+          overflow: auto;
+          .single-message-box{
+            display: flex;
+            flex-direction: column;
+            .single-me{
+              align-self: flex-end;
+              margin: 10px 20px;
+              padding: 8px 20px;
+              border-radius: 15px;
+              border: 1px solid #000;
+            }
+            .single-message{
+              align-self: start;
+              margin: 10px 20px;
+              padding: 8px 20px;
+              border-radius: 15px;
+              border: 1px solid #000;
+            }
+          }
         }
         .input-message{
           border-top:1px solid #dddddd;
