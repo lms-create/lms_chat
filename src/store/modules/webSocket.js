@@ -10,7 +10,8 @@ const state = {
   webSocketIsOpen: true,
   u_account: null, // ws登录userId
   sid: null, // ws登录token
-  msg: null // 接收到的信息
+  msg: null, // 接收到的信息
+  userList: []
 }
 const mutations = {
   // 发送http请求登录后设置用户id 用于ws登录
@@ -48,6 +49,10 @@ const mutations = {
       state.socketTask.onmessage = function(res) {
         console.log('收到服务器内容：', JSON.parse(res.data))
         state.msg = JSON.parse(res.data)
+        const data = JSON.parse(res.data)
+        if (data.code === 2) {
+          state.userList = data.result
+        }
       }
     }
     state.socketTask.onerror = function(errMsg) {
@@ -66,7 +71,8 @@ const mutations = {
     console.log('ws登录')
     const payload = {
       type: 0,
-      user_account: sessionStorage.getItem('user_account')
+      user_account: sessionStorage.getItem('user_account'),
+      user_name: sessionStorage.getItem('user_name')
     }
     that.commit('websocket/webSocketSend', payload)
     state.webSocketIsOpen = true

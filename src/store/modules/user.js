@@ -28,6 +28,7 @@ const actions = {
           localStorage.setItem('token', res.data.result.token)
           commit('SET_USER_INFO', res.data.result)
           sessionStorage.setItem('user_account', res.data.result.user_account)
+          sessionStorage.setItem('user_name', res.data.result.user_name)
           resolve(res.data.result)
           // this.$message.success(res.data.message)
         } else {
